@@ -1,0 +1,5 @@
+bin/
+admin-user-service
+.env
+.env.local
+vendor/
