@@ -27,13 +27,11 @@ type UserUpdateRequest struct {
 }
 
 type RoleListRequest struct {
-	PageInfo
 	Name      *string `form:"name" json:"name"`
 	GuardName *string `form:"guardName" json:"guardName"`
 }
 
 type PermissionListRequest struct {
-	PageInfo
 	Name      *string `form:"name" json:"name"`
 	GuardName *string `form:"guardName" json:"guardName"`
 }

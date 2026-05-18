@@ -20,8 +20,7 @@ var Role = &RoleService{
 	base: repositories.Repo.Base,
 }
 
-func (s *RoleService) List(ctx context.Context, req request.RoleListRequest) ([]entities.Role, int64, error) {
-	pageNumber, pageSize := normalizePage(req.PageNumber, req.PageSize)
+func (s *RoleService) List(ctx context.Context, req request.RoleListRequest) ([]entities.Role, error) {
 	db := database.GetDB().WithContext(ctx).Model(&entities.Role{})
 	if req.Name != nil && *req.Name != "" {
 		db = db.Where("name LIKE ?", "%"+*req.Name+"%")
@@ -29,16 +28,11 @@ func (s *RoleService) List(ctx context.Context, req request.RoleListRequest) ([]
 	if req.GuardName != nil && *req.GuardName != "" {
 		db = db.Where("guard_name = ?", *req.GuardName)
 	}
-	var total int64
-	if err := db.Count(&total).Error; err != nil {
-		return nil, 0, err
-	}
 	var roles []entities.Role
-	offset := (pageNumber - 1) * pageSize
-	if err := db.Order("created_at DESC").Offset(offset).Limit(pageSize).Find(&roles).Error; err != nil {
-		return nil, 0, err
+	if err := db.Order("created_at DESC").Find(&roles).Error; err != nil {
+		return nil, err
 	}
-	return roles, total, nil
+	return roles, nil
 }
 
 func (s *RoleService) FindByUUID(ctx context.Context, id uuid.UUID) (*entities.Role, error) {

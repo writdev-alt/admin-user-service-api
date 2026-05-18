@@ -23,7 +23,7 @@ func (c *PermissionController) List(ctx *gin.Context) {
 		c.HandleValidationError(ctx, pkgResponse.ServiceCodeCommon, err)
 		return
 	}
-	rows, total, err := services.Permission.List(ctx.Request.Context(), req)
+	rows, err := services.Permission.List(ctx.Request.Context(), req)
 	if err != nil {
 		pkgResponse.FailWithDetailed(ctx, http.StatusInternalServerError, pkgResponse.ServiceCodeCommon, pkgResponse.CaseCodeInternalError, nil, err.Error())
 		return
@@ -32,11 +32,7 @@ func (c *PermissionController) List(ctx *gin.Context) {
 	for _, p := range rows {
 		data = append(data, response.ToPermissionResponse(p))
 	}
-	pageNumber, pageSize := c.NormalizePagination(req.PageNumber, req.PageSize)
-	pkgResponse.SimplePaginated(ctx, http.StatusOK, pkgResponse.ServiceCodeCommon, pkgResponse.CaseCodeListRetrieved, pkgResponse.SimplePaginationResponse{
-		Data: data, PageNumber: pageNumber, PageSize: pageSize,
-		HasNext: int64(pageNumber*pageSize) < total, HasPrev: pageNumber > 1,
-	}, "Permissions retrieved successfully")
+	pkgResponse.OkWithDetailed(ctx, http.StatusOK, pkgResponse.ServiceCodeCommon, pkgResponse.CaseCodeListRetrieved, data, "Permissions retrieved successfully")
 }
 
 func (c *PermissionController) Detail(ctx *gin.Context) {

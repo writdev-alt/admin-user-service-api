@@ -20,8 +20,7 @@ var Permission = &PermissionService{
 	base: repositories.Repo.Base,
 }
 
-func (s *PermissionService) List(ctx context.Context, req request.PermissionListRequest) ([]entities.Permission, int64, error) {
-	pageNumber, pageSize := normalizePage(req.PageNumber, req.PageSize)
+func (s *PermissionService) List(ctx context.Context, req request.PermissionListRequest) ([]entities.Permission, error) {
 	db := database.GetDB().WithContext(ctx).Model(&entities.Permission{})
 	if req.Name != nil && *req.Name != "" {
 		db = db.Where("name LIKE ?", "%"+*req.Name+"%")
@@ -29,16 +28,11 @@ func (s *PermissionService) List(ctx context.Context, req request.PermissionList
 	if req.GuardName != nil && *req.GuardName != "" {
 		db = db.Where("guard_name = ?", *req.GuardName)
 	}
-	var total int64
-	if err := db.Count(&total).Error; err != nil {
-		return nil, 0, err
-	}
 	var rows []entities.Permission
-	offset := (pageNumber - 1) * pageSize
-	if err := db.Order("created_at DESC").Offset(offset).Limit(pageSize).Find(&rows).Error; err != nil {
-		return nil, 0, err
+	if err := db.Order("created_at DESC").Find(&rows).Error; err != nil {
+		return nil, err
 	}
-	return rows, total, nil
+	return rows, nil
 }
 
 func (s *PermissionService) FindByUUID(ctx context.Context, id uuid.UUID) (*entities.Permission, error) {

@@ -6,7 +6,6 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/turahe/pkg/database"
-	"github.com/turahe/pkg/types"
 	"github.com/writdev-alt/admin-user-service/internal/api/models/entities"
 	"github.com/writdev-alt/admin-user-service/internal/api/models/request"
 	"github.com/writdev-alt/admin-user-service/internal/api/repositories"
@@ -149,8 +148,7 @@ func (s *UserService) Delete(ctx context.Context, id uuid.UUID, actorID uint64) 
 	if err := s.base.Save(ctx, user); err != nil {
 		return err
 	}
-	_, err = s.base.Delete(ctx, "users", &entities.User{}, types.Conditions{"uuid": id.String()})
-	return err
+	return database.GetDB().WithContext(ctx).Delete(user).Error
 }
 
 func (s *UserService) ToggleStatus(ctx context.Context, id uuid.UUID, actorID uint64) (*entities.User, error) {

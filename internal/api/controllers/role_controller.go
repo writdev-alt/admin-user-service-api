@@ -23,7 +23,7 @@ func (c *RoleController) List(ctx *gin.Context) {
 		c.HandleValidationError(ctx, pkgResponse.ServiceCodeCommon, err)
 		return
 	}
-	roles, total, err := services.Role.List(ctx.Request.Context(), req)
+	roles, err := services.Role.List(ctx.Request.Context(), req)
 	if err != nil {
 		pkgResponse.FailWithDetailed(ctx, http.StatusInternalServerError, pkgResponse.ServiceCodeCommon, pkgResponse.CaseCodeInternalError, nil, err.Error())
 		return
@@ -32,11 +32,7 @@ func (c *RoleController) List(ctx *gin.Context) {
 	for _, r := range roles {
 		data = append(data, response.ToRoleResponse(r))
 	}
-	pageNumber, pageSize := c.NormalizePagination(req.PageNumber, req.PageSize)
-	pkgResponse.SimplePaginated(ctx, http.StatusOK, pkgResponse.ServiceCodeCommon, pkgResponse.CaseCodeListRetrieved, pkgResponse.SimplePaginationResponse{
-		Data: data, PageNumber: pageNumber, PageSize: pageSize,
-		HasNext: int64(pageNumber*pageSize) < total, HasPrev: pageNumber > 1,
-	}, "Roles retrieved successfully")
+	pkgResponse.OkWithDetailed(ctx, http.StatusOK, pkgResponse.ServiceCodeCommon, pkgResponse.CaseCodeListRetrieved, data, "Roles retrieved successfully")
 }
 
 func (c *RoleController) Detail(ctx *gin.Context) {
