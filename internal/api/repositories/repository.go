@@ -10,6 +10,7 @@ func baseRepo() IBaseRepository {
 
 type Repository struct {
 	Base       IBaseRepository
+	Admin      IAdminRepository
 	User       IUserRepository
 	Role       IRoleRepository
 	Permission IPermissionRepository
@@ -18,6 +19,7 @@ type Repository struct {
 func NewRepository() *Repository {
 	return &Repository{
 		Base:       baseRepo(),
+		Admin:      NewAdminRepository(),
 		User:       NewUserRepository(),
 		Role:       NewRoleRepository(),
 		Permission: NewPermissionRepository(),

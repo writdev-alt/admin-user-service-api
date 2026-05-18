@@ -9,6 +9,8 @@ import (
 func RegisterUserRouter(router *gin.RouterGroup) {
 	router.GET("", controllers.User.List)
 	router.POST("", controllers.User.Create)
+	router.PATCH("/:id/status", controllers.User.ToggleStatus)
 	router.GET("/:id", controllers.User.Detail)
 	router.PUT("/:id", controllers.User.Update)
+	router.DELETE("/:id", controllers.User.Delete)
 }

@@ -6,11 +6,14 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/turahe/pkg/database"
+	"github.com/turahe/pkg/types"
 	"github.com/writdev-alt/admin-user-service/internal/api/models/entities"
 	"github.com/writdev-alt/admin-user-service/internal/api/models/request"
 	"github.com/writdev-alt/admin-user-service/internal/api/repositories"
 	"golang.org/x/crypto/bcrypt"
 )
+
+var ErrUserNotFound = errors.New("user not found")
 
 type UserService struct {
 	repo repositories.IUserRepository
@@ -127,6 +130,38 @@ func (s *UserService) Update(ctx context.Context, id uuid.UUID, req request.User
 	if req.TwoFactorEnabled != nil {
 		user.TwoFactorEnabled = *req.TwoFactorEnabled
 	}
+	user.UpdatedBy = actorID
+	if err := s.base.Save(ctx, user); err != nil {
+		return nil, err
+	}
+	return user, nil
+}
+
+func (s *UserService) Delete(ctx context.Context, id uuid.UUID, actorID uint64) error {
+	user, err := s.repo.FindByUUID(ctx, id)
+	if err != nil {
+		return err
+	}
+	if user == nil {
+		return ErrUserNotFound
+	}
+	user.DeletedBy = actorID
+	if err := s.base.Save(ctx, user); err != nil {
+		return err
+	}
+	_, err = s.base.Delete(ctx, "users", &entities.User{}, types.Conditions{"uuid": id.String()})
+	return err
+}
+
+func (s *UserService) ToggleStatus(ctx context.Context, id uuid.UUID, actorID uint64) (*entities.User, error) {
+	user, err := s.repo.FindByUUID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	if user == nil {
+		return nil, ErrUserNotFound
+	}
+	user.Status = !user.Status
 	user.UpdatedBy = actorID
 	if err := s.base.Save(ctx, user); err != nil {
 		return nil, err

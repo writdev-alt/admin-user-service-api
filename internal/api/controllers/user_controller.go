@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -100,4 +101,39 @@ func (c *UserController) Update(ctx *gin.Context) {
 		return
 	}
 	pkgResponse.OkWithDetailed(ctx, http.StatusOK, pkgResponse.ServiceCodeCommon, pkgResponse.CaseCodeRetrieved, response.ToUserResponse(*user), "User updated successfully")
+}
+
+func (c *UserController) Delete(ctx *gin.Context) {
+	id, err := uuid.Parse(ctx.Param("id"))
+	if err != nil {
+		pkgResponse.ValidationErrorSimple(ctx, pkgResponse.ServiceCodeCommon, "id", "The id must be a valid UUID.")
+		return
+	}
+	if err := services.User.Delete(ctx.Request.Context(), id, 0); err != nil {
+		if errors.Is(err, services.ErrUserNotFound) {
+			pkgResponse.NotFoundError(ctx, pkgResponse.ServiceCodeCommon, pkgResponse.CaseCodeNotFound, "User not found")
+			return
+		}
+		pkgResponse.FailWithDetailed(ctx, http.StatusInternalServerError, pkgResponse.ServiceCodeCommon, pkgResponse.CaseCodeInternalError, nil, err.Error())
+		return
+	}
+	pkgResponse.OkWithDetailed(ctx, http.StatusOK, pkgResponse.ServiceCodeCommon, pkgResponse.CaseCodeDeleted, nil, "User deleted successfully")
+}
+
+func (c *UserController) ToggleStatus(ctx *gin.Context) {
+	id, err := uuid.Parse(ctx.Param("id"))
+	if err != nil {
+		pkgResponse.ValidationErrorSimple(ctx, pkgResponse.ServiceCodeCommon, "id", "The id must be a valid UUID.")
+		return
+	}
+	user, err := services.User.ToggleStatus(ctx.Request.Context(), id, 0)
+	if err != nil {
+		if errors.Is(err, services.ErrUserNotFound) {
+			pkgResponse.NotFoundError(ctx, pkgResponse.ServiceCodeCommon, pkgResponse.CaseCodeNotFound, "User not found")
+			return
+		}
+		pkgResponse.FailWithDetailed(ctx, http.StatusInternalServerError, pkgResponse.ServiceCodeCommon, pkgResponse.CaseCodeInternalError, nil, err.Error())
+		return
+	}
+	pkgResponse.OkWithDetailed(ctx, http.StatusOK, pkgResponse.ServiceCodeCommon, pkgResponse.CaseCodeUpdated, response.ToUserResponse(*user), "User status toggled successfully")
 }

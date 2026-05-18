@@ -1,6 +1,6 @@
 # Admin User Service
 
-Back-office microservice for **end users**, **roles**, and **permissions**. Matches user-gateway paths (`/api/v1/user`, `/roles`, `/permissions`) when proxied; this service exposes `/user`, `/roles`, `/permissions` directly.
+Back-office microservice for **end users**, **roles**, and **permissions**. Admin gateway: `/api/v1/users`, `/roles`, `/permissions`. This service exposes `/users`, `/roles`, `/permissions` directly.
 
 Cloned from the **user/user-service** project pattern (Gin + Cobra + `turahe/pkg`). Note: the `user/user-service` submodule currently contains merchant-service code; this admin service implements the user-domain API expected by the gateway.
 
@@ -8,10 +8,12 @@ Cloned from the **user/user-service** project pattern (Gin + Cobra + `turahe/pkg
 
 | Resource | Method | Path |
 |----------|--------|------|
-| Users | GET | `/user` |
-| Users | POST | `/user` |
-| Users | GET | `/user/:id` |
-| Users | PUT | `/user/:id` |
+| Users | GET | `/users` |
+| Users | POST | `/users` |
+| Users | GET | `/users/:id` |
+| Users | PUT | `/users/:id` |
+| Users | DELETE | `/users/:id` |
+| Users | PATCH | `/users/:id/status` |
 | Roles | GET | `/roles` |
 | Roles | GET | `/roles/:id` |
 | Permissions | GET | `/permissions` |

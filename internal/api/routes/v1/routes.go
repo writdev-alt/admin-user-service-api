@@ -7,6 +7,8 @@ import (
 	"github.com/turahe/pkg/config"
 	"github.com/turahe/pkg/jwt"
 	pkgMiddlewares "github.com/turahe/pkg/middlewares"
+	"github.com/writdev-alt/admin-user-service/internal/api/middleware"
+	"github.com/writdev-alt/admin-user-service/internal/api/repositories"
 )
 
 func Register(router *gin.Engine) {
@@ -20,8 +22,9 @@ func Register(router *gin.Engine) {
 
 	protected := v1.Group("")
 	protected.Use(pkgMiddlewares.AuthMiddleware(verifier))
+	protected.Use(middleware.RequireAdmin(repositories.Repo.Admin))
 	{
-		RegisterUserRouter(protected.Group("user"))
+		RegisterUserRouter(protected.Group("users"))
 		RegisterRoleRouter(protected.Group("roles"))
 		RegisterPermissionRouter(protected.Group("permissions"))
 	}
