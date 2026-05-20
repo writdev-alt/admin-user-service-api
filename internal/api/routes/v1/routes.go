@@ -23,6 +23,7 @@ func Register(router *gin.Engine) {
 	protected := v1.Group("")
 	protected.Use(pkgMiddlewares.AuthMiddleware(verifier))
 	protected.Use(middleware.RequireAdmin(repositories.Repo.Admin))
+	protected.Use(middleware.RequireAdminSession())
 	{
 		RegisterUserRouter(protected.Group("users"))
 		RegisterRoleRouter(protected.Group("roles"))
