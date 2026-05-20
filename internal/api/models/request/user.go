@@ -4,17 +4,18 @@ type UserListRequest struct {
 	PageInfo
 	Email    *string `form:"email" json:"email"`
 	Username *string `form:"username" json:"username"`
+	Search   *string `form:"search" json:"search"`
 	Status   *bool   `form:"status" json:"status"`
 }
 
 type UserCreateRequest struct {
-	Username        string  `json:"username" binding:"required,min=3"`
-	Email           string  `json:"email" binding:"required,email"`
-	Password        string  `json:"password" binding:"required,min=6"`
-	Phone           *string `json:"phone"`
-	Country         *string `json:"country"`
-	Status          *bool   `json:"status"`
-	TwoFactorEnabled *bool  `json:"twoFactorEnabled"`
+	Username         string  `json:"username" binding:"required,min=3"`
+	Email            string  `json:"email" binding:"required,email"`
+	Password         string  `json:"password" binding:"required,min=6"`
+	Phone            *string `json:"phone"`
+	Country          *string `json:"country"`
+	Status           *bool   `json:"status"`
+	TwoFactorEnabled *bool   `json:"twoFactorEnabled"`
 }
 
 type UserUpdateRequest struct {
@@ -24,6 +25,12 @@ type UserUpdateRequest struct {
 	Country          *string `json:"country"`
 	Status           *bool   `json:"status"`
 	TwoFactorEnabled *bool   `json:"twoFactorEnabled"`
+}
+
+// ChangeUserPasswordRequest sets a user's password (admin action; no current password).
+type ChangeUserPasswordRequest struct {
+	NewPassword     string `json:"newPassword" binding:"required,min=6"`
+	PasswordConfirm string `json:"passwordConfirm" binding:"required,eqfield=NewPassword"`
 }
 
 type RoleListRequest struct {

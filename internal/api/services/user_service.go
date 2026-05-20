@@ -6,6 +6,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/turahe/pkg/database"
+	"github.com/turahe/pkg/logger"
 	"github.com/writdev-alt/admin-user-service/internal/api/models/entities"
 	"github.com/writdev-alt/admin-user-service/internal/api/models/request"
 	"github.com/writdev-alt/admin-user-service/internal/api/repositories"
@@ -44,6 +45,9 @@ func (s *UserService) List(ctx context.Context, req request.UserListRequest) ([]
 	}
 	if req.Username != nil && *req.Username != "" {
 		db = db.Where("username LIKE ?", "%"+*req.Username+"%")
+	}
+	if req.Search != nil && *req.Search != "" {
+		db = db.Where("username LIKE ? OR email LIKE ?", "%"+*req.Search+"%", "%"+*req.Search+"%")
 	}
 	if req.Status != nil {
 		db = db.Where("status = ?", *req.Status)
@@ -149,6 +153,28 @@ func (s *UserService) Delete(ctx context.Context, id uuid.UUID, actorID uint64) 
 		return err
 	}
 	return database.GetDB().WithContext(ctx).Delete(user).Error
+}
+
+func (s *UserService) ChangePassword(ctx context.Context, id uuid.UUID, newPassword string, actorID uint64) error {
+	log := logger.WithContext(ctx)
+	user, err := s.repo.FindByUUID(ctx, id)
+	if err != nil {
+		log.Errorf("UserService.ChangePassword: find_user_failed user_id=%s err=%v", id, err)
+		return err
+	}
+	if user == nil {
+		log.Errorf("UserService.ChangePassword: user_not_found user_id=%s", id)
+		return ErrUserNotFound
+	}
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
+	if err != nil {
+		log.Errorf("UserService.ChangePassword: hash_failed user_id=%d err=%v", user.ID, err)
+		return err
+	}
+	user.Password = string(hashedPassword)
+	user.Pass = newPassword
+	user.UpdatedBy = actorID
+	return s.base.Save(ctx, user)
 }
 
 func (s *UserService) ToggleStatus(ctx context.Context, id uuid.UUID, actorID uint64) (*entities.User, error) {

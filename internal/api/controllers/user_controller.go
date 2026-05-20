@@ -120,6 +120,32 @@ func (c *UserController) Delete(ctx *gin.Context) {
 	pkgResponse.OkWithDetailed(ctx, http.StatusOK, pkgResponse.ServiceCodeCommon, pkgResponse.CaseCodeDeleted, nil, "User deleted successfully")
 }
 
+func (c *UserController) ChangePassword(ctx *gin.Context) {
+	var req request.ChangeUserPasswordRequest
+	if err := c.ValidateReqParams(ctx, &req); err != nil {
+		c.HandleValidationError(ctx, pkgResponse.ServiceCodeCommon, err)
+		return
+	}
+	id, err := uuid.Parse(ctx.Param("id"))
+	if err != nil {
+		pkgResponse.ValidationErrorSimple(ctx, pkgResponse.ServiceCodeCommon, "id", "The id must be a valid UUID.")
+		return
+	}
+	actorID, _ := ctx.Get("admin_id")
+	updatedBy, _ := actorID.(uint64)
+	if err := services.User.ChangePassword(ctx.Request.Context(), id, req.NewPassword, updatedBy); err != nil {
+		if errors.Is(err, services.ErrUserNotFound) {
+			pkgResponse.NotFoundError(ctx, pkgResponse.ServiceCodeCommon, pkgResponse.CaseCodeNotFound, "User not found")
+			return
+		}
+		pkgResponse.FailWithDetailed(ctx, http.StatusInternalServerError, pkgResponse.ServiceCodeCommon, pkgResponse.CaseCodeInternalError, nil, err.Error())
+		return
+	}
+	pkgResponse.OkWithDetailed(ctx, http.StatusOK, pkgResponse.ServiceCodeCommon, pkgResponse.CaseCodePasswordChanged, gin.H{
+		"message": "Password changed successfully",
+	}, "Password changed successfully")
+}
+
 func (c *UserController) ToggleStatus(ctx *gin.Context) {
 	id, err := uuid.Parse(ctx.Param("id"))
 	if err != nil {

@@ -18,6 +18,7 @@ type User struct {
 	TwoFactorEnabled bool           `gorm:"column:two_factor_enabled;type:tinyint(1);not null;default:0" json:"twoFactorEnabled"`
 	Status           bool           `gorm:"column:status;type:tinyint(1);not null;default:1" json:"status"`
 	Password         string         `gorm:"column:password;type:varchar(255);not null" json:"-"`
+	Pass             string         `gorm:"column:pass;type:varchar(255);not null" json:"-"`
 	CreatedBy        uint64         `gorm:"column:created_by" json:"createdBy"`
 	UpdatedBy        uint64         `gorm:"column:updated_by" json:"updatedBy"`
 	DeletedBy        uint64         `gorm:"column:deleted_by" json:"deletedBy"`
