@@ -25,9 +25,7 @@ func (s *RoleService) List(ctx context.Context, req request.RoleListRequest) ([]
 	if req.Name != nil && *req.Name != "" {
 		db = db.Where("name LIKE ?", "%"+*req.Name+"%")
 	}
-	if req.GuardName != nil && *req.GuardName != "" {
-		db = db.Where("guard_name = ?", *req.GuardName)
-	}
+	db = db.Where("guard_name = ?", req.GuardName)
 	var roles []entities.Role
 	if err := db.Order("created_at DESC").Find(&roles).Error; err != nil {
 		return nil, err

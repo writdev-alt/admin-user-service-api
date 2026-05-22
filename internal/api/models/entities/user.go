@@ -15,6 +15,7 @@ type User struct {
 	Country          *string        `gorm:"column:country;type:varchar(255)" json:"country"`
 	Email            string         `gorm:"column:email;type:varchar(255);not null" json:"email"`
 	EmailVerifiedAt  *time.Time     `gorm:"column:email_verified_at;type:timestamp" json:"emailVerifiedAt,omitempty"`
+	PhoneVerifiedAt  *time.Time     `gorm:"column:phone_verified_at;type:timestamp" json:"phoneVerifiedAt,omitempty"`
 	TwoFactorEnabled bool           `gorm:"column:two_factor_enabled;type:tinyint(1);not null;default:0" json:"twoFactorEnabled"`
 	Status           bool           `gorm:"column:status;type:tinyint(1);not null;default:1" json:"status"`
 	Password         string         `gorm:"column:password;type:varchar(255);not null" json:"-"`

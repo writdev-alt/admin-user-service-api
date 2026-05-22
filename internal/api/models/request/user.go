@@ -35,7 +35,7 @@ type ChangeUserPasswordRequest struct {
 
 type RoleListRequest struct {
 	Name      *string `form:"name" json:"name"`
-	GuardName *string `form:"guardName" json:"guardName"`
+	GuardName string  `form:"guardName" json:"guardName" binding:"required"`
 }
 
 type PermissionListRequest struct {

@@ -12,13 +12,14 @@ type UserResponse struct {
 	UserID           uint64     `json:"userId"`
 	Username         string     `json:"username"`
 	Email            string     `json:"email"`
-	Phone            *string    `json:"phone,omitempty"`
-	Country          *string    `json:"country,omitempty"`
-	EmailVerifiedAt  *time.Time `json:"emailVerifiedAt,omitempty"`
+	Phone            *string    `json:"phone"`
+	Country          *string    `json:"country"`
+	EmailVerifiedAt  *time.Time `json:"emailVerifiedAt"`
+	PhoneVerifiedAt  *time.Time `json:"phoneVerifiedAt"`
 	TwoFactorEnabled bool       `json:"twoFactorEnabled"`
 	Status           bool       `json:"status"`
-	CreatedAt        *time.Time `json:"createdAt,omitempty"`
-	UpdatedAt        *time.Time `json:"updatedAt,omitempty"`
+	CreatedAt        *time.Time `json:"createdAt"`
+	UpdatedAt        *time.Time `json:"updatedAt"`
 }
 
 func ToUserResponse(u entities.User) UserResponse {
@@ -30,6 +31,7 @@ func ToUserResponse(u entities.User) UserResponse {
 		Phone:            u.Phone,
 		Country:          u.Country,
 		EmailVerifiedAt:  u.EmailVerifiedAt,
+		PhoneVerifiedAt:  u.PhoneVerifiedAt,
 		TwoFactorEnabled: u.TwoFactorEnabled,
 		Status:           u.Status,
 		CreatedAt:        u.CreatedAt,
@@ -60,13 +62,13 @@ func ToRoleResponse(r entities.Role) RoleResponse {
 }
 
 type PermissionResponse struct {
-	ID          uuid.UUID  `json:"id"`
-	PermissionID uint64    `json:"permissionId"`
-	Name        string     `json:"name"`
-	GuardName   string     `json:"guardName"`
-	Description *string    `json:"description,omitempty"`
-	CreatedAt   *time.Time `json:"createdAt,omitempty"`
-	UpdatedAt   *time.Time `json:"updatedAt,omitempty"`
+	ID           uuid.UUID  `json:"id"`
+	PermissionID uint64     `json:"permissionId"`
+	Name         string     `json:"name"`
+	GuardName    string     `json:"guardName"`
+	Description  *string    `json:"description,omitempty"`
+	CreatedAt    *time.Time `json:"createdAt,omitempty"`
+	UpdatedAt    *time.Time `json:"updatedAt,omitempty"`
 }
 
 func ToPermissionResponse(p entities.Permission) PermissionResponse {
