@@ -13,6 +13,7 @@ type Repository struct {
 	Admin      IAdminRepository
 	User       IUserRepository
 	Role       IRoleRepository
+	ModelRole  IModelRoleRepository
 	Permission IPermissionRepository
 }
 
@@ -22,6 +23,7 @@ func NewRepository() *Repository {
 		Admin:      NewAdminRepository(),
 		User:       NewUserRepository(),
 		Role:       NewRoleRepository(),
+		ModelRole:  NewModelRoleRepository(),
 		Permission: NewPermissionRepository(),
 	}
 }

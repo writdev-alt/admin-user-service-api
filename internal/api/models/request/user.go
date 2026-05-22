@@ -16,6 +16,7 @@ type UserCreateRequest struct {
 	Country          *string `json:"country"`
 	Status           *bool   `json:"status"`
 	TwoFactorEnabled *bool   `json:"twoFactorEnabled"`
+	RoleID           *uint64 `json:"roleId"`
 }
 
 type UserUpdateRequest struct {
@@ -24,6 +25,7 @@ type UserUpdateRequest struct {
 	Phone            *string `json:"phone"`
 	Country          *string `json:"country"`
 	Status           *bool   `json:"status"`
+	RoleID           *uint64 `json:"roleId"`
 	TwoFactorEnabled *bool   `json:"twoFactorEnabled"`
 }
 
@@ -35,7 +37,7 @@ type ChangeUserPasswordRequest struct {
 
 type RoleListRequest struct {
 	Name      *string `form:"name" json:"name"`
-	GuardName string  `form:"guardName" json:"guardName" binding:"required"`
+	GuardName *string `form:"guardName" json:"guardName"`
 }
 
 type PermissionListRequest struct {

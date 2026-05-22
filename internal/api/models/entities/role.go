@@ -13,9 +13,9 @@ type Role struct {
 	Name        string     `gorm:"column:name;type:varchar(255);not null" json:"name"`
 	Description *string    `gorm:"column:description;type:varchar(255)" json:"description,omitempty"`
 	GuardName   string     `gorm:"column:guard_name;type:varchar(255);not null" json:"guardName"`
-	CreatedBy   uint64     `gorm:"column:created_by" json:"createdBy"`
-	UpdatedBy   uint64     `gorm:"column:updated_by" json:"updatedBy"`
-	DeletedBy   uint64     `gorm:"column:deleted_by" json:"deletedBy"`
+	CreatedBy   *uint64    `gorm:"column:created_by" json:"createdBy"`
+	UpdatedBy   *uint64    `gorm:"column:updated_by" json:"updatedBy"`
+	DeletedBy   *uint64    `gorm:"column:deleted_by" json:"deletedBy"`
 	CreatedAt   *time.Time `gorm:"column:created_at;type:timestamp" json:"createdAt,omitempty"`
 	UpdatedAt   *time.Time `gorm:"column:updated_at;type:timestamp" json:"updatedAt,omitempty"`
 	DeletedAt   *time.Time `gorm:"column:deleted_at;type:timestamp" json:"deletedAt,omitempty"`

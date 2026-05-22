@@ -16,14 +16,15 @@ type UserResponse struct {
 	Country          *string    `json:"country"`
 	EmailVerifiedAt  *time.Time `json:"emailVerifiedAt"`
 	PhoneVerifiedAt  *time.Time `json:"phoneVerifiedAt"`
-	TwoFactorEnabled bool       `json:"twoFactorEnabled"`
-	Status           bool       `json:"status"`
-	CreatedAt        *time.Time `json:"createdAt"`
-	UpdatedAt        *time.Time `json:"updatedAt"`
+	TwoFactorEnabled bool          `json:"twoFactorEnabled"`
+	Status           bool          `json:"status"`
+	Role             *RoleResponse `json:"role,omitempty"`
+	CreatedAt        *time.Time    `json:"createdAt"`
+	UpdatedAt        *time.Time    `json:"updatedAt"`
 }
 
-func ToUserResponse(u entities.User) UserResponse {
-	return UserResponse{
+func ToUserResponse(u entities.User, role *entities.Role) UserResponse {
+	resp := UserResponse{
 		ID:               u.UUID,
 		UserID:           u.ID,
 		Username:         u.Username,
@@ -37,6 +38,11 @@ func ToUserResponse(u entities.User) UserResponse {
 		CreatedAt:        u.CreatedAt,
 		UpdatedAt:        u.UpdatedAt,
 	}
+	if role != nil {
+		r := ToRoleResponse(*role)
+		resp.Role = &r
+	}
+	return resp
 }
 
 type RoleResponse struct {
