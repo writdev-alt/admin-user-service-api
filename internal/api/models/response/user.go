@@ -49,17 +49,18 @@ func ToUserResponse(u entities.User) UserResponse {
 }
 
 type RoleResponse struct {
-	ID          uuid.UUID  `json:"id"`
-	RoleID      uint64     `json:"roleId"`
-	Name        string     `json:"name"`
-	Description *string    `json:"description,omitempty"`
-	GuardName   string     `json:"guardName"`
-	CreatedAt   *time.Time `json:"createdAt,omitempty"`
-	UpdatedAt   *time.Time `json:"updatedAt,omitempty"`
+	ID          uuid.UUID            `json:"id"`
+	RoleID      uint64               `json:"roleId"`
+	Name        string               `json:"name"`
+	Description *string              `json:"description,omitempty"`
+	GuardName   string               `json:"guardName"`
+	Permissions []PermissionResponse `json:"permissions,omitempty"`
+	CreatedAt   *time.Time           `json:"createdAt,omitempty"`
+	UpdatedAt   *time.Time           `json:"updatedAt,omitempty"`
 }
 
 func ToRoleResponse(r entities.Role) RoleResponse {
-	return RoleResponse{
+	resp := RoleResponse{
 		ID:          r.UUID,
 		RoleID:      r.ID,
 		Name:        r.Name,
@@ -68,6 +69,10 @@ func ToRoleResponse(r entities.Role) RoleResponse {
 		CreatedAt:   r.CreatedAt,
 		UpdatedAt:   r.UpdatedAt,
 	}
+	for _, p := range r.Permissions {
+		resp.Permissions = append(resp.Permissions, ToPermissionResponse(p))
+	}
+	return resp
 }
 
 type PermissionResponse struct {
@@ -76,6 +81,8 @@ type PermissionResponse struct {
 	Name         string     `json:"name"`
 	GuardName    string     `json:"guardName"`
 	Description  *string    `json:"description,omitempty"`
+	Category     string     `json:"category"`
+	Danger       bool       `json:"danger"`
 	CreatedAt    *time.Time `json:"createdAt,omitempty"`
 	UpdatedAt    *time.Time `json:"updatedAt,omitempty"`
 }
@@ -87,6 +94,8 @@ func ToPermissionResponse(p entities.Permission) PermissionResponse {
 		Name:         p.Name,
 		GuardName:    p.GuardName,
 		Description:  p.Description,
+		Category:     p.Category,
+		Danger:       p.Danger,
 		CreatedAt:    p.CreatedAt,
 		UpdatedAt:    p.UpdatedAt,
 	}

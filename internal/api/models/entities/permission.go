@@ -13,6 +13,8 @@ type Permission struct {
 	Name        string     `gorm:"column:name;type:varchar(255);not null" json:"name"`
 	GuardName   string     `gorm:"column:guard_name;type:varchar(255);not null;default:web" json:"guardName"`
 	Description *string    `gorm:"column:description;type:varchar(255)" json:"description,omitempty"`
+	Category    string     `gorm:"column:category;type:varchar(255);not null" json:"category"`
+	Danger      bool       `gorm:"column:danger;type:tinyint(1);not null;default:0" json:"danger"`
 	CreatedBy   *uint64    `gorm:"column:created_by" json:"createdBy"`
 	UpdatedBy   *uint64    `gorm:"column:updated_by" json:"updatedBy"`
 	DeletedBy   *uint64    `gorm:"column:deleted_by" json:"deletedBy"`

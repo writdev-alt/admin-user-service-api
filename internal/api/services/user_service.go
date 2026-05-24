@@ -18,12 +18,12 @@ import (
 var ErrUserNotFound = errors.New("user not found")
 
 type UserService struct {
-	repo            repositories.IUserRepository
-	roleRepo        repositories.IRoleRepository
-	permRepo        repositories.IPermissionRepository
-	modelRoleRepo   repositories.IModelRoleRepository
-	modelPermRepo   repositories.IModelPermissionRepository
-	base            repositories.IBaseRepository
+	repo          repositories.IUserRepository
+	roleRepo      repositories.IRoleRepository
+	permRepo      repositories.IPermissionRepository
+	modelRoleRepo repositories.IModelRoleRepository
+	modelPermRepo repositories.IModelPermissionRepository
+	base          repositories.IBaseRepository
 }
 
 var User = &UserService{
@@ -47,11 +47,8 @@ func normalizePage(pageNumber, pageSize int) (int, int) {
 	return pageNumber, pageSize
 }
 
-func mergeRoleIDs(roleIDs []uint64, single *uint64) []uint64 {
+func mergeRoleIDs(roleIDs []uint64) []uint64 {
 	out := append([]uint64(nil), roleIDs...)
-	if single != nil {
-		out = append(out, *single)
-	}
 	return dedupeUint64(out)
 }
 
@@ -224,7 +221,7 @@ func (s *UserService) Create(ctx context.Context, req request.UserCreateRequest,
 		log.Warnf("UserService.Create: error saving user err=%v", err)
 		return nil, err
 	}
-	roleIDs := mergeRoleIDs(req.RoleIDs, req.RoleID)
+	roleIDs := mergeRoleIDs(req.RoleIDs)
 	if len(roleIDs) > 0 {
 		if err := s.syncRoles(ctx, user.ID, roleIDs); err != nil {
 			log.Warnf("UserService.Create: error assigning roles err=%v", err)
@@ -290,11 +287,6 @@ func (s *UserService) Update(ctx context.Context, id uuid.UUID, req request.User
 	if req.RoleIDs != nil {
 		if err := s.syncRoles(ctx, user.ID, dedupeUint64(*req.RoleIDs)); err != nil {
 			log.Warnf("UserService.Update: error assigning roles err=%v", err)
-			return nil, err
-		}
-	} else if req.RoleID != nil {
-		if err := s.syncRoles(ctx, user.ID, []uint64{*req.RoleID}); err != nil {
-			log.Warnf("UserService.Update: error assigning role err=%v", err)
 			return nil, err
 		}
 	}

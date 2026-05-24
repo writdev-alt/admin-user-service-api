@@ -9,28 +9,26 @@ type UserListRequest struct {
 }
 
 type UserCreateRequest struct {
-	Username         string  `json:"username" binding:"required,min=3"`
-	Email            string  `json:"email" binding:"required,email"`
-	Password         string  `json:"password" binding:"required,min=6"`
-	Phone            *string `json:"phone"`
-	Country          *string `json:"country"`
-	Status           *bool   `json:"status"`
-	TwoFactorEnabled *bool   `json:"twoFactorEnabled"`
-	RoleID          *uint64  `json:"roleId"`
-	RoleIDs         []uint64 `json:"roleIds"`
-	PermissionIDs   []uint64 `json:"permissionIds"`
+	Username         string   `json:"username" binding:"required,min=3"`
+	Email            string   `json:"email" binding:"required,email"`
+	Password         string   `json:"password" binding:"required,min=6"`
+	Phone            *string  `json:"phone"`
+	Country          *string  `json:"country"`
+	Status           *bool    `json:"status"`
+	TwoFactorEnabled *bool    `json:"twoFactorEnabled"`
+	RoleIDs          []uint64 `json:"roleIds"`
+	PermissionIDs    []uint64 `json:"permissionIds"`
 }
 
 type UserUpdateRequest struct {
-	Username         *string `json:"username"`
-	Email            *string `json:"email"`
-	Phone            *string `json:"phone"`
-	Country          *string `json:"country"`
-	Status           *bool   `json:"status"`
-	RoleID           *uint64  `json:"roleId"`
+	Username         *string   `json:"username"`
+	Email            *string   `json:"email"`
+	Phone            *string   `json:"phone"`
+	Country          *string   `json:"country"`
+	Status           *bool     `json:"status"`
 	RoleIDs          *[]uint64 `json:"roleIds"`
 	PermissionIDs    *[]uint64 `json:"permissionIds"`
-	TwoFactorEnabled *bool    `json:"twoFactorEnabled"`
+	TwoFactorEnabled *bool     `json:"twoFactorEnabled"`
 }
 
 // ChangeUserPasswordRequest sets a user's password (admin action; no current password).
