@@ -54,6 +54,28 @@ func (c *RoleController) Detail(ctx *gin.Context) {
 	pkgResponse.OkWithDetailed(ctx, http.StatusOK, pkgResponse.ServiceCodeCommon, pkgResponse.CaseCodeRetrieved, response.ToRoleResponse(*role), "Role retrieved successfully")
 }
 
+func (c *RoleController) GetUsers(ctx *gin.Context) {
+	id, err := uuid.Parse(ctx.Param("id"))
+	if err != nil {
+		pkgResponse.ValidationErrorSimple(ctx, pkgResponse.ServiceCodeCommon, "id", "The id must be a valid UUID.")
+		return
+	}
+	users, err := services.Role.GetUsers(ctx.Request.Context(), id)
+	if err != nil {
+		if errors.Is(err, services.ErrRoleNotFound) {
+			pkgResponse.NotFoundError(ctx, pkgResponse.ServiceCodeCommon, pkgResponse.CaseCodeNotFound, "Role not found")
+			return
+		}
+		pkgResponse.FailWithDetailed(ctx, http.StatusInternalServerError, pkgResponse.ServiceCodeCommon, pkgResponse.CaseCodeInternalError, nil, err.Error())
+		return
+	}
+	var data []interface{}
+	for _, u := range users {
+		data = append(data, response.ToUserResponse(u))
+	}
+	pkgResponse.OkWithDetailed(ctx, http.StatusOK, pkgResponse.ServiceCodeCommon, pkgResponse.CaseCodeListRetrieved, data, "Role users retrieved successfully")
+}
+
 func (c *RoleController) GetPermissions(ctx *gin.Context) {
 	id, err := uuid.Parse(ctx.Param("id"))
 	if err != nil {

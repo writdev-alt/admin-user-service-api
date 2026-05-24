@@ -15,17 +15,19 @@ import (
 var ErrRoleNotFound = errors.New("role not found")
 
 type RoleService struct {
-	repo         repositories.IRoleRepository
-	permRepo     repositories.IPermissionRepository
-	rolePermRepo repositories.IRolePermissionRepository
-	base         repositories.IBaseRepository
+	repo          repositories.IRoleRepository
+	permRepo      repositories.IPermissionRepository
+	rolePermRepo  repositories.IRolePermissionRepository
+	modelRoleRepo repositories.IModelRoleRepository
+	base          repositories.IBaseRepository
 }
 
 var Role = &RoleService{
-	repo:         repositories.Repo.Role,
-	permRepo:     repositories.Repo.Permission,
-	rolePermRepo: repositories.Repo.RolePermission,
-	base:         repositories.Repo.Base,
+	repo:          repositories.Repo.Role,
+	permRepo:      repositories.Repo.Permission,
+	rolePermRepo:  repositories.Repo.RolePermission,
+	modelRoleRepo: repositories.Repo.ModelRole,
+	base:          repositories.Repo.Base,
 }
 
 func (s *RoleService) List(ctx context.Context, req request.RoleListRequest) ([]entities.Role, error) {
@@ -68,6 +70,19 @@ func (s *RoleService) FindByUUID(ctx context.Context, id uuid.UUID) (*entities.R
 	}
 	role.Permissions = roles[0].Permissions
 	return role, nil
+}
+
+func (s *RoleService) GetUsers(ctx context.Context, roleUUID uuid.UUID) ([]entities.User, error) {
+	log := logger.WithContext(ctx)
+	log.Infof("RoleService.GetUsers: request_received")
+	role, err := s.repo.FindByUUID(ctx, roleUUID)
+	if err != nil {
+		return nil, err
+	}
+	if role == nil {
+		return nil, ErrRoleNotFound
+	}
+	return s.modelRoleRepo.UsersByRoleID(ctx, role.ID)
 }
 
 func (s *RoleService) GetPermissions(ctx context.Context, roleUUID uuid.UUID) ([]entities.Permission, error) {

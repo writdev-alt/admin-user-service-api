@@ -13,6 +13,7 @@ type IModelRoleRepository interface {
 	repositories.IBaseRepository
 	SetRoles(ctx context.Context, modelID uint64, roleIDs []uint64) error
 	RolesByUserIDs(ctx context.Context, userIDs []uint64) (map[uint64][]entities.Role, error)
+	UsersByRoleID(ctx context.Context, roleID uint64) ([]entities.User, error)
 }
 
 type ModelRoleRepository struct {
@@ -83,4 +84,29 @@ func (r *ModelRoleRepository) RolesByUserIDs(ctx context.Context, userIDs []uint
 		}
 	}
 	return out, nil
+}
+
+func (r *ModelRoleRepository) UsersByRoleID(ctx context.Context, roleID uint64) ([]entities.User, error) {
+	var links []entities.ModelRole
+	db := database.GetDB().WithContext(ctx)
+	if err := db.Where("role_id = ? AND model_type = ?", roleID, entities.ModelTypeUser).Find(&links).Error; err != nil {
+		return nil, err
+	}
+	if len(links) == 0 {
+		return []entities.User{}, nil
+	}
+	userIDs := make([]uint64, 0, len(links))
+	seen := make(map[uint64]struct{}, len(links))
+	for _, link := range links {
+		if _, ok := seen[link.ModelID]; ok {
+			continue
+		}
+		seen[link.ModelID] = struct{}{}
+		userIDs = append(userIDs, link.ModelID)
+	}
+	var users []entities.User
+	if err := db.Where("id IN ?", userIDs).Order("created_at DESC").Find(&users).Error; err != nil {
+		return nil, err
+	}
+	return users, nil
 }

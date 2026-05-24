@@ -8,6 +8,7 @@ import (
 
 func RegisterRoleRouter(router *gin.RouterGroup) {
 	router.GET("", controllers.Role.List)
+	router.GET("/:id/users", controllers.Role.GetUsers)
 	router.GET("/:id/permissions", controllers.Role.GetPermissions)
 	router.PUT("/:id/permissions", controllers.Role.SetPermissions)
 	router.GET("/:id", controllers.Role.Detail)
