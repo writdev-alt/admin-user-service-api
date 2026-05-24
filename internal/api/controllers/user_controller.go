@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"context"
 	"errors"
 	"net/http"
 
@@ -9,7 +8,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/turahe/pkg/logger"
 	pkgResponse "github.com/turahe/pkg/response"
-	"github.com/writdev-alt/admin-user-service/internal/api/models/entities"
 	"github.com/writdev-alt/admin-user-service/internal/api/models/request"
 	"github.com/writdev-alt/admin-user-service/internal/api/models/response"
 	"github.com/writdev-alt/admin-user-service/internal/api/services"
@@ -20,20 +18,6 @@ type UserController struct {
 }
 
 var User = &UserController{BaseController: NewBaseController()}
-
-func (c *UserController) userResponse(ctx context.Context, u entities.User, roles map[uint64]*entities.Role) (response.UserResponse, error) {
-	var role *entities.Role
-	if roles != nil {
-		role = roles[u.ID]
-	} else {
-		var err error
-		role, err = services.User.RoleForUser(ctx, u.ID)
-		if err != nil {
-			return response.UserResponse{}, err
-		}
-	}
-	return response.ToUserResponse(u, role), nil
-}
 
 func (c *UserController) List(ctx *gin.Context) {
 	var req request.UserListRequest
@@ -46,19 +30,9 @@ func (c *UserController) List(ctx *gin.Context) {
 		pkgResponse.FailWithDetailed(ctx, http.StatusInternalServerError, pkgResponse.ServiceCodeCommon, pkgResponse.CaseCodeInternalError, nil, err.Error())
 		return
 	}
-	roles, err := services.User.RolesForUsers(ctx.Request.Context(), users)
-	if err != nil {
-		pkgResponse.FailWithDetailed(ctx, http.StatusInternalServerError, pkgResponse.ServiceCodeCommon, pkgResponse.CaseCodeInternalError, nil, err.Error())
-		return
-	}
 	var data []interface{}
 	for _, u := range users {
-		resp, err := c.userResponse(ctx.Request.Context(), u, roles)
-		if err != nil {
-			pkgResponse.FailWithDetailed(ctx, http.StatusInternalServerError, pkgResponse.ServiceCodeCommon, pkgResponse.CaseCodeInternalError, nil, err.Error())
-			return
-		}
-		data = append(data, resp)
+		data = append(data, response.ToUserResponse(u))
 	}
 	pageNumber, pageSize := c.NormalizePagination(req.PageNumber, req.PageSize)
 	pkgResponse.SimplePaginated(ctx, http.StatusOK, pkgResponse.ServiceCodeCommon, pkgResponse.CaseCodeListRetrieved, pkgResponse.SimplePaginationResponse{
@@ -87,12 +61,7 @@ func (c *UserController) Detail(ctx *gin.Context) {
 		pkgResponse.NotFoundError(ctx, pkgResponse.ServiceCodeCommon, pkgResponse.CaseCodeNotFound, "User not found")
 		return
 	}
-	resp, err := c.userResponse(ctx.Request.Context(), *user, nil)
-	if err != nil {
-		pkgResponse.FailWithDetailed(ctx, http.StatusInternalServerError, pkgResponse.ServiceCodeCommon, pkgResponse.CaseCodeInternalError, nil, err.Error())
-		return
-	}
-	pkgResponse.OkWithDetailed(ctx, http.StatusOK, pkgResponse.ServiceCodeCommon, pkgResponse.CaseCodeRetrieved, resp, "User retrieved successfully")
+	pkgResponse.OkWithDetailed(ctx, http.StatusOK, pkgResponse.ServiceCodeCommon, pkgResponse.CaseCodeRetrieved, response.ToUserResponse(*user), "User retrieved successfully")
 }
 
 func (c *UserController) Create(ctx *gin.Context) {
@@ -122,12 +91,7 @@ func (c *UserController) Create(ctx *gin.Context) {
 		return
 	}
 	log.Infof("UserController.Create: user created successfully uuid=%s", user.UUID)
-	resp, err := c.userResponse(ctx.Request.Context(), *user, nil)
-	if err != nil {
-		pkgResponse.FailWithDetailed(ctx, http.StatusInternalServerError, pkgResponse.ServiceCodeCommon, pkgResponse.CaseCodeInternalError, nil, err.Error())
-		return
-	}
-	pkgResponse.Created(ctx, pkgResponse.ServiceCodeCommon, resp, "User created successfully")
+	pkgResponse.Created(ctx, pkgResponse.ServiceCodeCommon, response.ToUserResponse(*user), "User created successfully")
 }
 
 func (c *UserController) Update(ctx *gin.Context) {
@@ -166,12 +130,7 @@ func (c *UserController) Update(ctx *gin.Context) {
 		pkgResponse.NotFoundError(ctx, pkgResponse.ServiceCodeCommon, pkgResponse.CaseCodeNotFound, "User not found")
 		return
 	}
-	resp, err := c.userResponse(ctx.Request.Context(), *user, nil)
-	if err != nil {
-		pkgResponse.FailWithDetailed(ctx, http.StatusInternalServerError, pkgResponse.ServiceCodeCommon, pkgResponse.CaseCodeInternalError, nil, err.Error())
-		return
-	}
-	pkgResponse.OkWithDetailed(ctx, http.StatusOK, pkgResponse.ServiceCodeCommon, pkgResponse.CaseCodeRetrieved, resp, "User updated successfully")
+	pkgResponse.OkWithDetailed(ctx, http.StatusOK, pkgResponse.ServiceCodeCommon, pkgResponse.CaseCodeRetrieved, response.ToUserResponse(*user), "User updated successfully")
 }
 
 func (c *UserController) Delete(ctx *gin.Context) {
@@ -261,10 +220,5 @@ func (c *UserController) ToggleStatus(ctx *gin.Context) {
 		pkgResponse.FailWithDetailed(ctx, http.StatusInternalServerError, pkgResponse.ServiceCodeCommon, pkgResponse.CaseCodeInternalError, nil, err.Error())
 		return
 	}
-	resp, err := c.userResponse(ctx.Request.Context(), *user, nil)
-	if err != nil {
-		pkgResponse.FailWithDetailed(ctx, http.StatusInternalServerError, pkgResponse.ServiceCodeCommon, pkgResponse.CaseCodeInternalError, nil, err.Error())
-		return
-	}
-	pkgResponse.OkWithDetailed(ctx, http.StatusOK, pkgResponse.ServiceCodeCommon, pkgResponse.CaseCodeUpdated, resp, "User status toggled successfully")
+	pkgResponse.OkWithDetailed(ctx, http.StatusOK, pkgResponse.ServiceCodeCommon, pkgResponse.CaseCodeUpdated, response.ToUserResponse(*user), "User status toggled successfully")
 }

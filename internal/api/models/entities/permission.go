@@ -19,6 +19,8 @@ type Permission struct {
 	CreatedAt   *time.Time `gorm:"column:created_at;type:timestamp" json:"createdAt,omitempty"`
 	UpdatedAt   *time.Time `gorm:"column:updated_at;type:timestamp" json:"updatedAt,omitempty"`
 	DeletedAt   *time.Time `gorm:"column:deleted_at;type:timestamp" json:"deletedAt,omitempty"`
+
+	Roles []Role `gorm:"many2many:role_permissions;" json:"roles,omitempty"`
 }
 
 func (Permission) TableName() string { return "permissions" }

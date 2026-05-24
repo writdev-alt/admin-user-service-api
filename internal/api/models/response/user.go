@@ -8,22 +8,23 @@ import (
 )
 
 type UserResponse struct {
-	ID               uuid.UUID  `json:"id"`
-	UserID           uint64     `json:"userId"`
-	Username         string     `json:"username"`
-	Email            string     `json:"email"`
-	Phone            *string    `json:"phone"`
-	Country          *string    `json:"country"`
-	EmailVerifiedAt  *time.Time `json:"emailVerifiedAt"`
-	PhoneVerifiedAt  *time.Time `json:"phoneVerifiedAt"`
-	TwoFactorEnabled bool          `json:"twoFactorEnabled"`
-	Status           bool          `json:"status"`
-	Role             *RoleResponse `json:"role,omitempty"`
-	CreatedAt        *time.Time    `json:"createdAt"`
-	UpdatedAt        *time.Time    `json:"updatedAt"`
+	ID               uuid.UUID            `json:"id"`
+	UserID           uint64               `json:"userId"`
+	Username         string               `json:"username"`
+	Email            string               `json:"email"`
+	Phone            *string              `json:"phone"`
+	Country          *string              `json:"country"`
+	EmailVerifiedAt  *time.Time           `json:"emailVerifiedAt"`
+	PhoneVerifiedAt  *time.Time           `json:"phoneVerifiedAt"`
+	TwoFactorEnabled bool                 `json:"twoFactorEnabled"`
+	Status           bool                 `json:"status"`
+	Roles            []RoleResponse       `json:"roles,omitempty"`
+	Permissions      []PermissionResponse `json:"permissions,omitempty"`
+	CreatedAt        *time.Time           `json:"createdAt"`
+	UpdatedAt        *time.Time           `json:"updatedAt"`
 }
 
-func ToUserResponse(u entities.User, role *entities.Role) UserResponse {
+func ToUserResponse(u entities.User) UserResponse {
 	resp := UserResponse{
 		ID:               u.UUID,
 		UserID:           u.ID,
@@ -38,9 +39,11 @@ func ToUserResponse(u entities.User, role *entities.Role) UserResponse {
 		CreatedAt:        u.CreatedAt,
 		UpdatedAt:        u.UpdatedAt,
 	}
-	if role != nil {
-		r := ToRoleResponse(*role)
-		resp.Role = &r
+	for _, r := range u.Roles {
+		resp.Roles = append(resp.Roles, ToRoleResponse(r))
+	}
+	for _, p := range u.Permissions {
+		resp.Permissions = append(resp.Permissions, ToPermissionResponse(p))
 	}
 	return resp
 }

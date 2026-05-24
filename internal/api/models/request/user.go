@@ -16,7 +16,9 @@ type UserCreateRequest struct {
 	Country          *string `json:"country"`
 	Status           *bool   `json:"status"`
 	TwoFactorEnabled *bool   `json:"twoFactorEnabled"`
-	RoleID           *uint64 `json:"roleId"`
+	RoleID          *uint64  `json:"roleId"`
+	RoleIDs         []uint64 `json:"roleIds"`
+	PermissionIDs   []uint64 `json:"permissionIds"`
 }
 
 type UserUpdateRequest struct {
@@ -25,8 +27,10 @@ type UserUpdateRequest struct {
 	Phone            *string `json:"phone"`
 	Country          *string `json:"country"`
 	Status           *bool   `json:"status"`
-	RoleID           *uint64 `json:"roleId"`
-	TwoFactorEnabled *bool   `json:"twoFactorEnabled"`
+	RoleID           *uint64  `json:"roleId"`
+	RoleIDs          *[]uint64 `json:"roleIds"`
+	PermissionIDs    *[]uint64 `json:"permissionIds"`
+	TwoFactorEnabled *bool    `json:"twoFactorEnabled"`
 }
 
 // ChangeUserPasswordRequest sets a user's password (admin action; no current password).

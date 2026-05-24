@@ -18,16 +18,20 @@ import (
 var ErrUserNotFound = errors.New("user not found")
 
 type UserService struct {
-	repo          repositories.IUserRepository
-	roleRepo      repositories.IRoleRepository
-	modelRoleRepo repositories.IModelRoleRepository
-	base          repositories.IBaseRepository
+	repo            repositories.IUserRepository
+	roleRepo        repositories.IRoleRepository
+	permRepo        repositories.IPermissionRepository
+	modelRoleRepo   repositories.IModelRoleRepository
+	modelPermRepo   repositories.IModelPermissionRepository
+	base            repositories.IBaseRepository
 }
 
 var User = &UserService{
 	repo:          repositories.Repo.User,
 	roleRepo:      repositories.Repo.Role,
+	permRepo:      repositories.Repo.Permission,
 	modelRoleRepo: repositories.Repo.ModelRole,
+	modelPermRepo: repositories.Repo.ModelPermission,
 	base:          repositories.Repo.Base,
 }
 
@@ -41,6 +45,92 @@ func normalizePage(pageNumber, pageSize int) (int, int) {
 		pageSize = 100
 	}
 	return pageNumber, pageSize
+}
+
+func mergeRoleIDs(roleIDs []uint64, single *uint64) []uint64 {
+	out := append([]uint64(nil), roleIDs...)
+	if single != nil {
+		out = append(out, *single)
+	}
+	return dedupeUint64(out)
+}
+
+func dedupeUint64(ids []uint64) []uint64 {
+	if len(ids) == 0 {
+		return ids
+	}
+	seen := make(map[uint64]struct{}, len(ids))
+	out := make([]uint64, 0, len(ids))
+	for _, id := range ids {
+		if _, ok := seen[id]; ok {
+			continue
+		}
+		seen[id] = struct{}{}
+		out = append(out, id)
+	}
+	return out
+}
+
+func (s *UserService) AttachRelations(ctx context.Context, users []entities.User) error {
+	if len(users) == 0 {
+		return nil
+	}
+	ids := make([]uint64, len(users))
+	for i := range users {
+		ids[i] = users[i].ID
+	}
+	rolesByUser, err := s.modelRoleRepo.RolesByUserIDs(ctx, ids)
+	if err != nil {
+		return err
+	}
+	permsByUser, err := s.modelPermRepo.PermissionsByUserIDs(ctx, ids)
+	if err != nil {
+		return err
+	}
+	for i := range users {
+		users[i].Roles = rolesByUser[users[i].ID]
+		users[i].Permissions = permsByUser[users[i].ID]
+	}
+	return nil
+}
+
+func (s *UserService) attachRelations(ctx context.Context, user *entities.User) error {
+	if user == nil {
+		return nil
+	}
+	users := []entities.User{*user}
+	if err := s.AttachRelations(ctx, users); err != nil {
+		return err
+	}
+	user.Roles = users[0].Roles
+	user.Permissions = users[0].Permissions
+	return nil
+}
+
+func (s *UserService) syncRoles(ctx context.Context, userID uint64, roleIDs []uint64) error {
+	for _, id := range roleIDs {
+		role, err := s.roleRepo.FindByID(ctx, id)
+		if err != nil {
+			return err
+		}
+		if role == nil {
+			return errors.New("role not found")
+		}
+	}
+	return s.modelRoleRepo.SetRoles(ctx, userID, roleIDs)
+}
+
+func (s *UserService) syncPermissions(ctx context.Context, userID uint64, permissionIDs []uint64) error {
+	for _, id := range permissionIDs {
+		perm, err := s.permRepo.FindByID(ctx, id)
+		if err != nil {
+			return err
+		}
+		if perm == nil {
+			return errors.New("permission not found")
+		}
+	}
+	return s.modelPermRepo.SetPermissions(ctx, userID, permissionIDs)
 }
 
 func (s *UserService) List(ctx context.Context, req request.UserListRequest) ([]entities.User, int64, error) {
@@ -71,6 +161,10 @@ func (s *UserService) List(ctx context.Context, req request.UserListRequest) ([]
 		log.Warnf("UserService.List: error finding users err=%v", err)
 		return nil, 0, err
 	}
+	if err := s.AttachRelations(ctx, users); err != nil {
+		log.Warnf("UserService.List: error loading relations err=%v", err)
+		return nil, 0, err
+	}
 	return users, total, nil
 }
 
@@ -86,19 +180,10 @@ func (s *UserService) FindByUUID(ctx context.Context, id uuid.UUID) (*entities.U
 		log.Warnf("UserService.FindByUUID: user not found")
 		return nil, ErrUserNotFound
 	}
-	return user, nil
-}
-
-func (s *UserService) RoleForUser(ctx context.Context, userID uint64) (*entities.Role, error) {
-	return s.modelRoleRepo.RoleByUserID(ctx, userID)
-}
-
-func (s *UserService) RolesForUsers(ctx context.Context, users []entities.User) (map[uint64]*entities.Role, error) {
-	ids := make([]uint64, len(users))
-	for i := range users {
-		ids[i] = users[i].ID
+	if err := s.attachRelations(ctx, user); err != nil {
+		return nil, err
 	}
-	return s.modelRoleRepo.RolesByUserIDs(ctx, ids)
+	return user, nil
 }
 
 func (s *UserService) Create(ctx context.Context, req request.UserCreateRequest, adminID uint64) (*entities.User, error) {
@@ -139,19 +224,21 @@ func (s *UserService) Create(ctx context.Context, req request.UserCreateRequest,
 		log.Warnf("UserService.Create: error saving user err=%v", err)
 		return nil, err
 	}
-	if req.RoleID != nil {
-		role, err := s.roleRepo.FindByID(ctx, *req.RoleID)
-		if err != nil {
-			log.Warnf("UserService.Create: error finding role err=%v", err)
+	roleIDs := mergeRoleIDs(req.RoleIDs, req.RoleID)
+	if len(roleIDs) > 0 {
+		if err := s.syncRoles(ctx, user.ID, roleIDs); err != nil {
+			log.Warnf("UserService.Create: error assigning roles err=%v", err)
 			return nil, err
 		}
-		if role == nil {
-			return nil, errors.New("role not found")
-		}
-		if err := s.modelRoleRepo.AssignRole(ctx, user.ID, role.ID); err != nil {
-			log.Warnf("UserService.Create: error assigning role err=%v", err)
+	}
+	if len(req.PermissionIDs) > 0 {
+		if err := s.syncPermissions(ctx, user.ID, dedupeUint64(req.PermissionIDs)); err != nil {
+			log.Warnf("UserService.Create: error assigning permissions err=%v", err)
 			return nil, err
 		}
+	}
+	if err := s.attachRelations(ctx, &user); err != nil {
+		return nil, err
 	}
 	log.Infof("UserService.Create: user created successfully uuid=%s", user.UUID)
 	return &user, nil
@@ -200,19 +287,25 @@ func (s *UserService) Update(ctx context.Context, id uuid.UUID, req request.User
 		log.Warnf("UserService.Update: error saving user err=%v", err)
 		return nil, err
 	}
-	if req.RoleID != nil {
-		role, err := s.roleRepo.FindByID(ctx, *req.RoleID)
-		if err != nil {
-			log.Warnf("UserService.Update: error finding role err=%v", err)
+	if req.RoleIDs != nil {
+		if err := s.syncRoles(ctx, user.ID, dedupeUint64(*req.RoleIDs)); err != nil {
+			log.Warnf("UserService.Update: error assigning roles err=%v", err)
 			return nil, err
 		}
-		if role == nil {
-			return nil, errors.New("role not found")
-		}
-		if err := s.modelRoleRepo.ReplaceRole(ctx, user.ID, role.ID); err != nil {
+	} else if req.RoleID != nil {
+		if err := s.syncRoles(ctx, user.ID, []uint64{*req.RoleID}); err != nil {
 			log.Warnf("UserService.Update: error assigning role err=%v", err)
 			return nil, err
 		}
+	}
+	if req.PermissionIDs != nil {
+		if err := s.syncPermissions(ctx, user.ID, dedupeUint64(*req.PermissionIDs)); err != nil {
+			log.Warnf("UserService.Update: error assigning permissions err=%v", err)
+			return nil, err
+		}
+	}
+	if err := s.attachRelations(ctx, user); err != nil {
+		return nil, err
 	}
 	return user, nil
 }
@@ -281,6 +374,9 @@ func (s *UserService) ToggleStatus(ctx context.Context, id uuid.UUID, actorID ui
 	user.UpdatedBy = &actorID
 	if err := s.base.Save(ctx, user); err != nil {
 		log.Warnf("UserService.ToggleStatus: error saving user err=%v", err)
+		return nil, err
+	}
+	if err := s.attachRelations(ctx, user); err != nil {
 		return nil, err
 	}
 	log.Infof("UserService.ToggleStatus: user status toggled successfully uuid=%s", user.UUID)

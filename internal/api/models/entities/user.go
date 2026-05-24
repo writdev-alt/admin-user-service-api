@@ -26,6 +26,8 @@ type User struct {
 	CreatedAt        *time.Time     `gorm:"column:created_at;type:timestamp" json:"createdAt,omitempty"`
 	UpdatedAt        *time.Time     `gorm:"column:updated_at;type:timestamp" json:"updatedAt,omitempty"`
 	DeletedAt        gorm.DeletedAt `gorm:"column:deleted_at;type:timestamp;index" json:"deletedAt,omitempty"`
+	Permissions      []Permission   `gorm:"many2many:model_permissions;" json:"permissions,omitempty"`
+	Roles            []Role         `gorm:"many2many:model_roles;" json:"roles,omitempty"`
 }
 
 func (User) TableName() string { return "users" }
